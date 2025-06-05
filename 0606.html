@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seni Seviyorum!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            /* Mor Tema */
+            --primary: #8a2be2; /* Koyu Mor */
+            --secondary: #b19cd9; /* Açık Mor */
+            --accent: #9b59b6; /* Orta Mor */
+            --text: #333;
+            --light: #f3e5f5; /* Çok Açık Mor */
+            /* Gölge için daha belirgin değerler */
+            --shadow: 8px 8px 15px rgba(0, 0, 0, 0.2); /* Daha belirgin gölge */
+            --card-hover-shadow: 15px 15px 30px rgba(0, 0, 0, 0.3); /* Hover'da daha da belirgin */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--light), #e0b0ff); /* Mor tonlarında gradient */
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            color: var(--accent);
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        .cards-container {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            overflow-x: scroll; /* Yatay kaydırma */
+            scroll-snap-type: x mandatory;
+            width: 100%;
+            max-width: 1200px; /* Konteynerin maksimum genişliği */
+            margin: 0 auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+            scroll-behavior: smooth; /* Yumuşak kaydırma */
+        }
+
+        .cards-container::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+
+        .card {
+            scroll-snap-align: center; /* Kartın ortasına hizala */
+            flex-shrink: 0; /* Kartların küçülmesini engelle */
+            width: 500px; /* Sabit yatay 16:9 genişliği */
+            height: calc(500px / 16 * 9); /* 16:9 en boy oranı (yatay) */
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow); /* Daha belirgin gölge */
+            border: 2px solid var(--secondary); /* Çerçeve */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            background-blend-mode: overlay;
+            background-color: rgba(255, 255, 255, 0.9);
+
+            /* Spot ışığı efekti için ::before */
+            position: relative; /* ::after için gerekli */
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.3) 0%, transparent 70%); /* Sol çaprazdan spot ışık */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover::after {
+            opacity: 1; /* Hover'da spot ışığı belirsin */
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--card-hover-shadow); /* Hover'da daha belirgin gölge */
+        }
+
+        .card::before { /* Bu zaten kartın üstündeki renkli bant için kullanılıyor */
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .card h2 {
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+            position: relative;
+            z-index: 1; /* Işığın önüne gelsin */
+            line-height: 1.3;
+        }
+
+        /* Kartlardaki <p> etiketini gizle */
+        .card p {
+            display: none;
+        }
+
+        .card-number {
+            position: absolute;
+            bottom: 20px;
+            font-size: 1rem;
+            color: var(--accent);
+            font-weight: bold;
+            z-index: 1; /* Işığın önüne gelsin */
+        }
+
+        .pagination {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination-dot.active {
+            background-color: var(--primary);
+            transform: scale(1.2);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal h2 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
+
+        .modal p {
+            color: #555;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5rem;
+            color: #aaa;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: var(--primary);
+        }
+
+        .heart {
+            position: fixed;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 10;
+            font-size: 25px;
+            transform: translateY(0) translateX(0) scale(1);
+            animation: floatHeart 2s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes floatHeart {
+            0% {
+                opacity: 0;
+                transform: translateY(0) scale(0.5);
+            }
+            20% {
+                opacity: 1;
+                transform: translateY(-20px) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-200px) scale(1.2) translateX(var(--heart-x-offset));
+            }
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: var(--accent);
+            font-size: 0.9rem;
+            animation: fadeIn 2s ease;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .card {
+                width: 80vw; /* Mobil için daha uygun genişlik */
+                height: calc(80vw / 16 * 9); /* Mobil için 16:9 yatay */
+                padding: 15px;
+            }
+
+            .card h2 {
+                font-size: 1.3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                width: 90vw; /* Çok küçük ekranlar için */
+                height: calc(90vw / 16 * 9); /* Çok küçük ekranlar için 16:9 yatay */
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Seni Seviyorum! 💜</h1>
+        <p class="subtitle">6. ayımız için 6 hediye kartı 🎉</p>
+    </header>
+
+    <div class="cards-container">
+        <div class="card" onclick="handleCardClick(1)">
+            <h2>Kayıp Defterin İadesi 📕</h2>
+            <div class="card-number">1. Hediye Kartı</div>
+        </div>
+
+        <div class="card" onclick="handleCardClick(2)">
+            <h2>Kaçış Bileti 🎫</h2>
+            <div class="card-number">2. Hediye Kartı</div>
+        </div>
+
+        <div class="card" onclick="handleCardClick(3)">
+            <h2>Çıkma teklifi 🥂</h2>
+            <div class="card-number">3. Hediye Kartı</div>
+        </div>
+
+        <div class="card" onclick="handleCardClick(4)">
+            <h2>Silahları Bırakıyoruz🏳</h2>
+            <div class="card-number">4. Hediye Kartı</div>
+        </div>
+
+        <div class="card" onclick="handleCardClick(5)">
+            <h2>Lezzetler Benden Manzara Senden 😋</h2>
+            <div class="card-number">5. Hediye Kartı</div>
+        </div>
+
+        <div class="card" onclick="handleCardClick(6)">
+            <h2>Sürpriz 🎁</h2>
+            <div class="card-number">6. Hediye Kartı</div>
+        </div>
+    </div>
+
+    <div class="pagination">
+        <div class="pagination-dot active" onclick="scrollToCard(0)"></div>
+        <div class="pagination-dot" onclick="scrollToCard(1)"></div>
+        <div class="pagination-dot" onclick="scrollToCard(2)"></div>
+        <div class="pagination-dot" onclick="scrollToCard(3)"></div>
+        <div class="pagination-dot" onclick="scrollToCard(4)"></div>
+        <div class="pagination-dot" onclick="scrollToCard(5)"></div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title">Başlık</h2>
+            <p id="modal-description">Açıklama</p>
+        </div>
+    </div>
+
+    <footer>
+        Ömer Özdal
+    </footer>
+
+    <script>
+        const cards = [
+            {
+                title: "Kayıp Defterin İadesi 📕",
+                description: "Doldurmam için verdiğin defteri bu kartla beraber teslim ediyorum."
+            },
+            {
+                title: "Kaçış Bileti 🎫",
+                description: "Kaçamak için istediğin bir şehri seçiyorsun ve her şeyi planlıyorum."
+            },
+            {
+                title: "Çıkma teklifi 🥂",
+                description: "Güzel bir akşam yemeği?"
+            },
+            {
+                title: "Silahları Bırakıyoruz🏳",
+                description: "Kullandığın an sınırsız affediyorum."
+            },
+            {
+                title: "Lezzetler Benden Manzara Senden 😋",
+                description: "6 lezzet hazırlıyorum ve istediğin yerde pikniğe gidiyoruz."
+            },
+            {
+                title: "Sürpriz 🎁",
+                description: "Bu bir sürpriz, yalnızca açınca görebilirsin."
+            }
+        ];
+
+        const cardsContainer = document.querySelector('.cards-container');
+        const dots = document.querySelectorAll('.pagination-dot');
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDescription = document.getElementById('modal-description');
+
+        // Scroll event to update active dot
+        cardsContainer.addEventListener('scroll', () => {
+            const scrollPosition = cardsContainer.scrollLeft;
+            const cardWidth = cardsContainer.querySelector('.card').offsetWidth + 20; // including gap
+            const activeIndex = Math.round(scrollPosition / cardWidth);
+            
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === activeIndex);
+            });
+        });
+
+        function scrollToCard(index) {
+            const cardWidth = cardsContainer.querySelector('.card').offsetWidth + 20;
+            cardsContainer.scrollTo({
+                left: index * cardWidth,
+                behavior: 'smooth'
+            });
+        }
+
+        // Kart tıklama olayını yöneten fonksiyon
+        function handleCardClick(cardIndex) {
+            createHearts(); // Önce kalpleri fışkırt
+            setTimeout(() => {
+                openModal(cardIndex); // Sonra pop-up'ı aç
+            }, 500); // Kalp animasyonunun başlaması için küçük bir gecikme
+        }
+
+        function openModal(cardIndex) {
+            const card = cards[cardIndex - 1];
+            modalTitle.textContent = card.title;
+            modalDescription.textContent = card.description;
+            modal.style.display = 'flex';
+            modal.querySelector('.modal-content').style.animation = 'slideUp 0.4s ease forwards'; // Modal içeriği için animasyon
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            modal.querySelector('.modal-content').style.animation = ''; // Animasyonu sıfırla
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Create floating hearts animation
+        function createHearts() {
+            const colors = ['#ff6b8b', '#ff8fa3', '#ffb3c1', '#ffd7e1', '#b19cd9', '#8a2be2']; // Mor ve pembe tonları
+            const numHearts = 50; // Fışkıracak kalp sayısı
+
+            for (let i = 0; i < numHearts; i++) {
+                const heart = document.createElement('div');
+                heart.classList.add('heart');
+                heart.innerHTML = '❤️';
+                heart.style.color = colors[Math.floor(Math.random() * colors.length)];
+                
+                // Kalplerin ekranın ortasına yakın bir yerden fışkırması için
+                const startX = window.innerWidth / 2 + (Math.random() - 0.5) * 200; // Ekranın ortasından biraz sapma
+                const startY = window.innerHeight / 2 + (Math.random() - 0.5) * 200;
+                
+                heart.style.left = `${startX}px`;
+                heart.style.top = `${startY}px`;
+                
+                const duration = (Math.random() * 1.5 + 1.5); // 1.5 ile 3 saniye arası
+                const delay = Math.random() * 0.5; // Gecikme
+                const offsetX = (Math.random() - 0.5) * 400; // Yatayda daha fazla sapma
+                
+                heart.style.animationDuration = `${duration}s`;
+                heart.style.animationDelay = `${delay}s`;
+                heart.style.setProperty('--heart-x-offset', `${offsetX}px`);
+                
+                document.body.appendChild(heart);
+
+                // Animasyon bitince kalpleri DOM'dan kaldır
+                heart.addEventListener('animationend', () => {
+                    heart.remove();
+                });
+            }
+        }
+
+        // Initial animation
+        document.querySelectorAll('.card').forEach((card, index) => {
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 200);
+        });
+    </script>
+</body>
+</html>
